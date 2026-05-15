@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { apiBaseURL } from './services/api';
+import MissingApiConfig from './components/MissingApiConfig';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -49,6 +51,10 @@ const MainLayout = ({ children }) => {
 };
 
 function App() {
+  if (!import.meta.env.DEV && !apiBaseURL) {
+    return <MissingApiConfig />;
+  }
+
   return (
     <BrowserRouter>
       <AuthProvider>

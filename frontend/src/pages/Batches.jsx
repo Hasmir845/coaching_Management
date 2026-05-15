@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { batchAPI, teacherAPI, studentAPI } from '../services/api';
 import { Plus, Edit2, Trash2, Search, Users } from 'lucide-react';
 import { refToId } from '../utils/refs';
+import { formatApiError } from '../utils/apiError';
+import LoadErrorBanner from '../components/LoadErrorBanner';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -22,6 +24,7 @@ const Batches = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     subject: '',
@@ -50,6 +53,7 @@ const Batches = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setLoadError('');
       const [batchRes, teacherRes, studentRes] = await Promise.all([
         batchAPI.getAll(),
         teacherAPI.getAll(),
@@ -60,6 +64,7 @@ const Batches = () => {
       setStudents(studentRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
+      setLoadError(formatApiError(error));
     } finally {
       setLoading(false);
     }
@@ -182,6 +187,7 @@ const Batches = () => {
 
   return (
     <div className="p-4 md:p-8">
+      {loadError ? <LoadErrorBanner message={loadError} onRetry={fetchData} /> : null}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-secondary">Batches</h1>

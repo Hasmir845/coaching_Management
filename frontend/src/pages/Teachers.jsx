@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { teacherAPI } from '../services/api';
 import { Plus, Edit2, Trash2, Search } from 'lucide-react';
+import { formatApiError } from '../utils/apiError';
+import LoadErrorBanner from '../components/LoadErrorBanner';
 
 const Teachers = () => {
   const [teachers, setTeachers] = useState([]);
@@ -9,6 +11,7 @@ const Teachers = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     subject: '',
@@ -35,10 +38,12 @@ const Teachers = () => {
   const fetchTeachers = async () => {
     try {
       setLoading(true);
+      setLoadError('');
       const res = await teacherAPI.getAll();
       setTeachers(res.data);
     } catch (error) {
       console.error('Error fetching teachers:', error);
+      setLoadError(formatApiError(error));
     } finally {
       setLoading(false);
     }
@@ -91,6 +96,7 @@ const Teachers = () => {
 
   return (
     <div className="p-4 md:p-8">
+      {loadError ? <LoadErrorBanner message={loadError} onRetry={fetchTeachers} /> : null}
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>

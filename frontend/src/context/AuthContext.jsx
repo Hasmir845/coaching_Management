@@ -18,12 +18,41 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    let settled = false;
+
+    const finish = (currentUser) => {
+      if (settled) return;
+      settled = true;
       setUser(currentUser);
       setLoading(false);
-    });
+    };
 
-    return unsubscribe;
+    const timeoutId = setTimeout(() => {
+      if (!settled) {
+        console.warn(
+          'Firebase auth did not respond in time. Check VITE_FIREBASE_* in .env (local) or site build settings (Netlify).'
+        );
+        finish(null);
+      }
+    }, 10000);
+
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (currentUser) => {
+        clearTimeout(timeoutId);
+        finish(currentUser);
+      },
+      (error) => {
+        console.error('Firebase auth error:', error);
+        clearTimeout(timeoutId);
+        finish(null);
+      }
+    );
+
+    return () => {
+      clearTimeout(timeoutId);
+      unsubscribe();
+    };
   }, []);
 
   // Email/Password Sign In

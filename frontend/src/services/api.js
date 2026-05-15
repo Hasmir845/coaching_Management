@@ -8,25 +8,20 @@ function normalizeApiBase(raw) {
   return u;
 }
 
-const resolved = normalizeApiBase(import.meta.env.VITE_API_URL) ||
-  (import.meta.env.DEV
-    ? '/api'
-    : typeof window !== 'undefined'
-    ? window.location.hostname.includes('netlify.app')
-      ? 'https://coaching-management.vercel.app/api'
-      : `${window.location.origin}/api`
-    : '/api');
+export const apiBaseURL =
+  normalizeApiBase(import.meta.env.VITE_API_URL) || (import.meta.env.DEV ? '/api' : null);
 
-if (!import.meta.env.DEV && !normalizeApiBase(import.meta.env.VITE_API_URL)) {
-  console.warn(
-    'VITE_API_URL is not configured. Falling back to',
-    resolved,
-    '\nIf your backend is hosted separately from the frontend, set VITE_API_URL to the full API URL in your production environment.'
+if (!import.meta.env.DEV && !apiBaseURL) {
+  console.error(
+    'VITE_API_URL is not set for production. Add it in Netlify/Vercel (e.g. https://YOUR-BACKEND.vercel.app/api) and redeploy the frontend.'
   );
 }
 
+const resolved = apiBaseURL || '/api';
+
 const api = axios.create({
   baseURL: resolved,
+  timeout: 12000,
 });
 
 // Teachers API

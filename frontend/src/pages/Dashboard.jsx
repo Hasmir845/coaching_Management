@@ -13,6 +13,8 @@ import {
   Table2,
 } from 'lucide-react';
 import { format, startOfWeek, parseISO, startOfMonth } from 'date-fns';
+import { formatApiError } from '../utils/apiError';
+import LoadErrorBanner from '../components/LoadErrorBanner';
 
 function mondayOfDateKey(dateKey) {
   return format(startOfWeek(parseISO(dateKey), { weekStartsOn: 1 }), 'yyyy-MM-dd');
@@ -31,6 +33,7 @@ const Dashboard = () => {
   const [schedulePayload, setSchedulePayload] = useState({ rows: [], weekStart: '', weekEnd: '' });
   const [recentActivities, setRecentActivities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [registerStart, setRegisterStart] = useState(() => format(startOfMonth(new Date()), 'yyyy-MM-dd'));
   const [registerEnd, setRegisterEnd] = useState(() => format(new Date(), 'yyyy-MM-dd'));
   const [classRegister, setClassRegister] = useState({
@@ -46,6 +49,7 @@ const Dashboard = () => {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
+      setLoadError('');
       const [statsRes, classesRes, notHeldRes, scheduleRes, activitiesRes] = await Promise.all([
         dashboardAPI.getStats(),
         dashboardAPI.getTodayClasses(),
@@ -70,6 +74,7 @@ const Dashboard = () => {
       setRecentActivities(activitiesRes.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      setLoadError(formatApiError(error));
     } finally {
       setLoading(false);
     }
@@ -131,6 +136,9 @@ const Dashboard = () => {
 
   return (
     <div className="p-4 md:p-8">
+      {loadError ? (
+        <LoadErrorBanner message={loadError} onRetry={fetchDashboardData} />
+      ) : null}
       <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <img
           src="/coaching-logo.svg"
