@@ -25,11 +25,24 @@ const frontendOrigins = (process.env.FRONTEND_URL || '')
 function corsOrigin(origin, callback) {
   if (!origin) return callback(null, true);
   if (frontendOrigins.includes(origin)) return callback(null, true);
-  if (/^https:\/\/([a-z0-9-]+\.)*netlify\.app$/i.test(origin)) {
-    return callback(null, true);
+
+  try {
+    const { hostname, protocol } = new URL(origin);
+    if (protocol === 'https:' || protocol === 'http:') {
+      if (hostname.endsWith('.netlify.app') || hostname.endsWith('.netlify.live')) {
+        return callback(null, true);
+      }
+      // Custom domain (e.g. Netlify custom URL) — allow https; set FRONTEND_URL to lock down
+      if (protocol === 'https:') {
+        return callback(null, true);
+      }
+    }
+  } catch {
+    /* ignore */
   }
+
   if (frontendOrigins.length === 0) return callback(null, true);
-  console.warn('CORS blocked origin:', origin, 'Expected one of:', frontendOrigins);
+  console.warn('CORS blocked origin:', origin, 'FRONTEND_URL:', frontendOrigins);
   return callback(new Error(`CORS: ${origin} not allowed`));
 }
 

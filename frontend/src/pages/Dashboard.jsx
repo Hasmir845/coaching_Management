@@ -51,7 +51,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       setLoadError('');
-      const [statsRes, classesRes, notHeldRes, scheduleRes, activitiesRes] = await Promise.all([
+      const results = await Promise.allSettled([
         dashboardAPI.getStats(),
         dashboardAPI.getTodayClasses(),
         dashboardAPI.getAbsentTeachers(),
@@ -59,10 +59,26 @@ const Dashboard = () => {
         dashboardAPI.getRecentActivities(),
       ]);
 
-      setStats(statsRes.data);
-      setTodayClasses(classesRes.data);
-      setNotHeldClasses(notHeldRes.data);
-      const sched = scheduleRes.data;
+      const failed = results.filter((r) => r.status === 'rejected');
+      if (failed.length === results.length) {
+        throw failed[0].reason;
+      }
+      if (failed.length > 0) {
+        setLoadError(formatApiError(failed[0].reason));
+      }
+
+      const pick = (i) => (results[i].status === 'fulfilled' ? results[i].value : null);
+
+      const statsRes = pick(0);
+      const classesRes = pick(1);
+      const notHeldRes = pick(2);
+      const scheduleRes = pick(3);
+      const activitiesRes = pick(4);
+
+      if (statsRes) setStats(statsRes.data);
+      if (classesRes) setTodayClasses(classesRes.data);
+      if (notHeldRes) setNotHeldClasses(notHeldRes.data);
+      const sched = scheduleRes?.data;
       if (sched && Array.isArray(sched.rows)) {
         setSchedulePayload({
           rows: sched.rows,
@@ -72,7 +88,7 @@ const Dashboard = () => {
       } else {
         setSchedulePayload({ rows: Array.isArray(sched) ? sched : [], weekStart: '', weekEnd: '' });
       }
-      setRecentActivities(activitiesRes.data);
+      if (activitiesRes) setRecentActivities(activitiesRes.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       setLoadError(formatApiError(error));

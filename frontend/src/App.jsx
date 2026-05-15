@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { isFirebaseConfigured } from './firebase';
 import MissingFirebaseConfig from './components/MissingFirebaseConfig';
 import PageLoader from './components/PageLoader';
+import ApiConnectionBanner from './components/ApiConnectionBanner';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -41,6 +42,7 @@ const MainLayout = ({ children }) => {
         navigate={navigate}
       />
       <div className="flex-1 overflow-auto mt-16 md:mt-0">
+        <ApiConnectionBanner />
         {children}
       </div>
     </div>
