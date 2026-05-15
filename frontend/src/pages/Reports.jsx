@@ -21,6 +21,7 @@ const Reports = () => {
   const [batches, setBatches] = useState([]);
   const [selectedBatch, setSelectedBatch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
@@ -31,17 +32,23 @@ const Reports = () => {
   const fetchReports = async () => {
     try {
       setLoading(true);
+      setError('');
       const [teacherRes, absentRes, batchRes] = await Promise.all([
         reportsAPI.getTeacherClassCount(),
         reportsAPI.getAbsentCount(),
         batchAPI.getAll(),
       ]);
 
-      setTeacherClassCount(teacherRes.data || []);
-      setAbsentCount(absentRes.data || []);
-      setBatches(batchRes.data || []);
-    } catch (error) {
-      console.error('Error fetching reports:', error);
+      setTeacherClassCount(Array.isArray(teacherRes.data) ? teacherRes.data : []);
+      setAbsentCount(Array.isArray(absentRes.data) ? absentRes.data : []);
+      setBatches(Array.isArray(batchRes.data) ? batchRes.data : []);
+    } catch (err) {
+      console.error('Error fetching reports:', err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          'রিপোর্ট লোড করা যায়নি। API ঠিক আছে কিনা (VITE_API_URL) ও ব্যাকএন্ড চালু আছে কিনা দেখুন।'
+      );
     } finally {
       setLoading(false);
     }
@@ -72,12 +79,26 @@ const Reports = () => {
         <p className="text-gray-600 mt-1">View coaching center analytics</p>
       </header>
 
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={() => fetchReports()}
+            className="shrink-0 rounded-lg bg-red-700 px-3 py-1.5 text-white text-xs font-semibold hover:bg-red-800"
+          >
+            আবার চেষ্টা
+          </button>
+        </div>
+      )}
+
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8 mb-8">
         <article className="card flex flex-col">
           <h2 className="text-xl font-bold text-secondary mb-1">Classes per teacher</h2>
           <p className="text-sm text-gray-500 mb-4">Total class records attributed to each teacher</p>
-          <div className="w-full min-h-[320px] flex-1">
+          <div className="w-full min-h-[320px] min-w-0 flex-1">
             {teacherClassCount.length > 0 ? (
+              <div className="h-[320px] w-full min-w-0">
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart
                   layout="vertical"
@@ -104,6 +125,7 @@ const Reports = () => {
                   <Bar dataKey="classCount" name="Classes" fill="#3B82F6" radius={[0, 6, 6, 0]} maxBarSize={28} />
                 </BarChart>
               </ResponsiveContainer>
+              </div>
             ) : (
               <p className="text-gray-500 text-sm py-8 text-center">No data available</p>
             )}
@@ -113,8 +135,9 @@ const Reports = () => {
         <article className="card flex flex-col">
           <h2 className="text-xl font-bold text-secondary mb-1">Absence total (students)</h2>
           <p className="text-sm text-gray-500 mb-4">Sum of absent student counts by teacher</p>
-          <div className="w-full min-h-[320px] flex-1 flex items-center justify-center">
+          <div className="w-full min-h-[320px] min-w-0 flex flex-1 items-center justify-center">
             {absentCount.length > 0 ? (
+              <div className="h-[320px] w-full min-w-0">
               <ResponsiveContainer width="100%" height={320}>
                 <PieChart margin={{ top: 12, right: 12, left: 12, bottom: 48 }}>
                   <Pie
@@ -147,6 +170,7 @@ const Reports = () => {
                   />
                 </PieChart>
               </ResponsiveContainer>
+              </div>
             ) : (
               <p className="text-gray-500 text-sm py-8 text-center">No data available</p>
             )}

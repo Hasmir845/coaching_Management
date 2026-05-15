@@ -9,6 +9,17 @@ function formatMoney(n) {
   return `৳ ${v.toLocaleString('en-BD', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
+function formatEntryDate(value) {
+  try {
+    if (value == null) return '—';
+    const d = typeof value === 'string' ? parseISO(value) : new Date(value);
+    if (Number.isNaN(d.getTime())) return '—';
+    return format(d, 'dd MMM yyyy');
+  } catch {
+    return '—';
+  }
+}
+
 const emptyForm = () => ({
   kind: 'income',
   amount: '',
@@ -52,9 +63,14 @@ const Finance = () => {
         financeAPI.getSummary(rangeParams()),
         batchAPI.getAll(),
       ]);
-      setEntries(listRes.data);
-      setSummary(sumRes.data);
-      setBatches(batchRes.data);
+      setEntries(Array.isArray(listRes.data) ? listRes.data : []);
+      const s = sumRes.data || {};
+      setSummary({
+        income: Number(s.income) || 0,
+        expense: Number(s.expense) || 0,
+        balance: Number(s.balance) || 0,
+      });
+      setBatches(Array.isArray(batchRes.data) ? batchRes.data : []);
     } catch (e) {
       console.error(e);
       setError('ডেটা লোড করা যায়নি। ব্যাকএন্ড চালু আছে কিনা দেখুন।');
@@ -81,10 +97,19 @@ const Finance = () => {
 
   const openEdit = (row) => {
     setEditingId(row._id);
+    let dateStr = format(new Date(), 'yyyy-MM-dd');
+    try {
+      if (row.date) {
+        const d = typeof row.date === 'string' ? parseISO(row.date) : new Date(row.date);
+        if (!Number.isNaN(d.getTime())) dateStr = format(d, 'yyyy-MM-dd');
+      }
+    } catch {
+      /* keep default */
+    }
     setFormData({
       kind: row.kind,
       amount: String(row.amount),
-      date: format(parseISO(row.date), 'yyyy-MM-dd'),
+      date: dateStr,
       batch: refToId(row.batch) || '',
       purpose: row.purpose || '',
       notes: row.notes || '',
@@ -97,9 +122,15 @@ const Finance = () => {
     setSaving(true);
     setError('');
     try {
+      const amt = Number(formData.amount);
+      if (!Number.isFinite(amt) || amt <= 0) {
+        setError('সঠিক টাকার পরিমাণ দিন');
+        setSaving(false);
+        return;
+      }
       const payload = {
         kind: formData.kind,
-        amount: Number(formData.amount),
+        amount: amt,
         date: formData.date,
         purpose: formData.purpose.trim(),
         notes: formData.notes.trim() || undefined,
@@ -247,30 +278,37 @@ const Finance = () => {
         <div className="bg-white rounded-xl shadow border border-gray-100 p-5 md:p-6 mb-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4">{editingId ? 'এডিট' : 'নতুন'} এন্ট্রি</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex flex-wrap gap-4">
-              <div>
-                <span className="block text-sm text-gray-600 mb-1">ধরন</span>
-                <div className="flex rounded-lg overflow-hidden border border-gray-300">
-                  <button
-                    type="button"
-                    onClick={() => setFormData((p) => ({ ...p, kind: 'income' }))}
-                    className={`px-4 py-2 text-sm font-medium ${
-                      formData.kind === 'income' ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700'
-                    }`}
-                  >
-                    আয় (ব্যাচ / ফি)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData((p) => ({ ...p, kind: 'expense', batch: '' }))}
-                    className={`px-4 py-2 text-sm font-medium ${
-                      formData.kind === 'expense' ? 'bg-rose-600 text-white' : 'bg-white text-gray-700'
-                    }`}
-                  >
-                    খরচ
-                  </button>
-                </div>
+            <div className="flex flex-col gap-3">
+              <span className="text-sm font-semibold text-gray-700">ধরন নির্বাচন করুন</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData((p) => ({ ...p, kind: 'income' }))}
+                  className={`rounded-xl border-2 px-4 py-4 text-left transition shadow-sm ${
+                    formData.kind === 'income'
+                      ? 'border-emerald-600 bg-emerald-50 ring-2 ring-emerald-200'
+                      : 'border-gray-200 bg-white hover:border-emerald-300'
+                  }`}
+                >
+                  <span className="block text-sm font-bold text-emerald-800">আয়</span>
+                  <span className="text-xs text-gray-600">ব্যাচ / ফি / টিউশন ফি ইত্যাদি</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData((p) => ({ ...p, kind: 'expense', batch: '' }))}
+                  className={`rounded-xl border-2 px-4 py-4 text-left transition shadow-sm ${
+                    formData.kind === 'expense'
+                      ? 'border-rose-600 bg-rose-50 ring-2 ring-rose-200'
+                      : 'border-gray-200 bg-white hover:border-rose-300'
+                  }`}
+                >
+                  <span className="block text-sm font-bold text-rose-800">খরচ</span>
+                  <span className="text-xs text-gray-600">ভাড়া, বেতন, বই, ইউটিলিটি — যেকোনো খরচ</span>
+                </button>
               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-4">
               <div className="flex-1 min-w-[140px]">
                 <label className="block text-sm text-gray-600 mb-1">টাকার পরিমাণ *</label>
                 <input
@@ -382,7 +420,7 @@ const Finance = () => {
                 {entries.map((row) => (
                   <tr key={row._id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-4 py-3 whitespace-nowrap">
-                      {format(parseISO(row.date), 'dd MMM yyyy')}
+                      {formatEntryDate(row.date)}
                     </td>
                     <td className="px-4 py-3">
                       <span

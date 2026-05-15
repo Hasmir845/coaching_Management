@@ -1,12 +1,19 @@
 import axios from 'axios';
 
-// In dev, `/api` uses Vite proxy (vite.config.js → localhost:5000) and avoids port mismatches.
-const API_URL =
-  import.meta.env.VITE_API_URL ||
+/** Netlify/Vercel: accept `https://api.example.com` or `.../api` (axios paths are /teachers, /finance, …) */
+function normalizeApiBase(raw) {
+  if (raw == null || String(raw).trim() === '') return null;
+  let u = String(raw).trim().replace(/\/+$/, '');
+  if (!u.endsWith('/api')) u = `${u}/api`;
+  return u;
+}
+
+const resolved =
+  normalizeApiBase(import.meta.env.VITE_API_URL) ||
   (import.meta.env.DEV ? '/api' : 'http://localhost:5000/api');
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: resolved,
 });
 
 // Teachers API

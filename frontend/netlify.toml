@@ -5,8 +5,9 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# SPA (React Router)
+# SPA (React Router). Also see public/_redirects (copied into dist).
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+  force = false
