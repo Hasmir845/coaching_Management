@@ -8,16 +8,29 @@ function normalizeApiBase(raw) {
   return u;
 }
 
-export const apiBaseURL =
-  normalizeApiBase(import.meta.env.VITE_API_URL) || (import.meta.env.DEV ? '/api' : null);
-
-if (!import.meta.env.DEV && !apiBaseURL) {
-  console.error(
-    'VITE_API_URL is not set for production. Add it in Netlify/Vercel (e.g. https://YOUR-BACKEND.vercel.app/api) and redeploy the frontend.'
-  );
+// Determine backend URL with fallback strategy
+let resolved;
+if (import.meta.env.DEV) {
+  // Local development
+  resolved = '/api';
+} else if (import.meta.env.VITE_API_URL) {
+  // Production with explicit config
+  resolved = normalizeApiBase(import.meta.env.VITE_API_URL);
+} else if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+  // Local with explicit host
+  resolved = '/api';
+} else {
+  // Production without config - use Vercel backend
+  resolved = 'https://coaching-management-ubiu.vercel.app/api';
 }
 
-const resolved = apiBaseURL || '/api';
+if (!import.meta.env.DEV && !import.meta.env.VITE_API_URL) {
+  console.warn(
+    'VITE_API_URL not configured. Using fallback:',
+    resolved,
+    '\nFor better control, set VITE_API_URL in your deployment environment variables.'
+  );
+}
 
 const api = axios.create({
   baseURL: resolved,
