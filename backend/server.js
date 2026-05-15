@@ -31,8 +31,16 @@ if (frontendOrigins.length === 1) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Connect to MongoDB
-dbConnect();
+// Middleware to ensure DB is connected before handling requests
+app.use(async (req, res, next) => {
+  try {
+    await dbConnect();
+    next();
+  } catch (error) {
+    console.error('DB connection failed:', error);
+    res.status(503).json({ message: 'Database connection failed' });
+  }
+});
 
 // Root (opening the deployment URL without /api/...)
 app.get('/', (req, res) => {
