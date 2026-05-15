@@ -24,7 +24,6 @@ exports.getEntries = async (req, res) => {
       query.kind = kind;
     }
     const entries = await FinanceEntry.find(query)
-      .populate('batch', 'name subject')
       .sort({ date: -1, createdAt: -1 });
     res.json(entries);
   } catch (error) {
@@ -84,8 +83,7 @@ exports.createEntry = async (req, res) => {
       notes: (notes || '').trim() || undefined,
     });
     const saved = await entry.save();
-    const populated = await FinanceEntry.findById(saved._id).populate('batch', 'name subject');
-    res.status(201).json(populated);
+    res.status(201).json(saved);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -130,8 +128,7 @@ exports.updateEntry = async (req, res) => {
     }
 
     await entry.save();
-    const populated = await FinanceEntry.findById(entry._id).populate('batch', 'name subject');
-    res.json(populated);
+    res.json(entry);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

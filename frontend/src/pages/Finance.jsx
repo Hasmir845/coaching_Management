@@ -20,6 +20,14 @@ function formatEntryDate(value) {
   }
 }
 
+function getBatchName(batch, batches) {
+  if (!batch) return '—';
+  if (typeof batch === 'object' && batch.name) return batch.name;
+  const batchId = String(batch);
+  const found = batches.find((item) => String(item._id) === batchId);
+  return found ? found.name : '—';
+}
+
 const emptyForm = () => ({
   kind: 'income',
   amount: '',
@@ -443,7 +451,7 @@ const Finance = () => {
                       {row.notes && <div className="text-xs text-gray-500 mt-0.5">{row.notes}</div>}
                     </td>
                     <td className="px-4 py-3 text-gray-700">
-                      {row.batch ? `${row.batch.name}` : '—'}
+                      {getBatchName(row.batch, batches)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1">

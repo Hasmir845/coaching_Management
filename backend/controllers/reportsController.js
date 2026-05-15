@@ -1,59 +1,44 @@
 const ClassTracking = require('../models/ClassTracking');
 
-const batchLookupStages = [
-  {
-    $lookup: {
-      from: 'batches',
-      localField: 'batch',
-      foreignField: '_id',
-      as: 'batchData',
-    },
-  },
-  {
-    $addFields: {
-      teacherRef: {
-        $ifNull: [
-          '$teacher',
-          {
-            $ifNull: [
-              { $arrayElemAt: ['$batchData.teacher', 0] },
-              { $arrayElemAt: [{ $ifNull: ['$batchData.teachers', []] }, 0] },
-            ],
-          },
-        ],
-      },
-    },
-  },
-  {
-    $lookup: {
-      from: 'teachers',
-      localField: 'teacherRef',
-      foreignField: '_id',
-      as: 'teacherLookup',
-    },
-  },
-  {
-    $addFields: {
-      teacherLookup: { $arrayElemAt: ['$teacherLookup', 0] },
-    },
-  },
-];
+/** Same resolution order as dashboard: class.teacher, else batch.teachers[0], else batch.teacher */
+function resolveTeacherFromClassDoc(cls) {
+  if (cls.teacher) return cls.teacher;
+  const batch = cls.batch;
+  if (!batch) return null;
+  if (batch.teachers && batch.teachers.length) return batch.teachers[0];
+  if (batch.teacher) return batch.teacher;
+  return null;
+}
 
 // Get teacher class count report
 exports.getTeacherClassCount = async (req, res) => {
   try {
-    const report = await ClassTracking.aggregate([
-      ...batchLookupStages,
-      {
-        $group: {
-          _id: '$teacherLookup._id',
-          teacherName: { $first: { $ifNull: ['$teacherLookup.name', 'Unknown'] } },
-          classCount: { $sum: 1 },
-        },
-      },
-      { $sort: { classCount: -1 } },
-    ]);
+    const sessions = await ClassTracking.find({})
+      .populate('teacher', 'name')
+      .populate({
+        path: 'batch',
+        select: 'teacher teachers',
+        populate: [
+          { path: 'teacher', select: 'name' },
+          { path: 'teachers', select: 'name' },
+        ],
+      });
 
+    const byKey = new Map();
+    for (const cls of sessions) {
+      const t = resolveTeacherFromClassDoc(cls);
+      const key = t && t._id ? String(t._id) : 'unknown';
+      if (!byKey.has(key)) {
+        byKey.set(key, {
+          _id: t && t._id ? t._id : null,
+          teacherName: (t && t.name) || 'Unknown',
+          classCount: 0,
+        });
+      }
+      byKey.get(key).classCount += 1;
+    }
+
+    const report = [...byKey.values()].sort((a, b) => b.classCount - a.classCount);
     res.json(report);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -63,18 +48,32 @@ exports.getTeacherClassCount = async (req, res) => {
 // Get absent count report
 exports.getAbsentCount = async (req, res) => {
   try {
-    const report = await ClassTracking.aggregate([
-      ...batchLookupStages,
-      {
-        $group: {
-          _id: '$teacherLookup._id',
-          teacher: { $first: { $ifNull: ['$teacherLookup.name', 'Unknown'] } },
-          count: { $sum: { $ifNull: ['$totalAbsent', 0] } },
-        },
-      },
-      { $sort: { count: -1 } },
-    ]);
+    const sessions = await ClassTracking.find({})
+      .populate('teacher', 'name')
+      .populate({
+        path: 'batch',
+        select: 'teacher teachers',
+        populate: [
+          { path: 'teacher', select: 'name' },
+          { path: 'teachers', select: 'name' },
+        ],
+      });
 
+    const byKey = new Map();
+    for (const cls of sessions) {
+      const t = resolveTeacherFromClassDoc(cls);
+      const key = t && t._id ? String(t._id) : 'unknown';
+      if (!byKey.has(key)) {
+        byKey.set(key, {
+          _id: t && t._id ? t._id : null,
+          teacher: (t && t.name) || 'Unknown',
+          count: 0,
+        });
+      }
+      byKey.get(key).count += cls.totalAbsent || 0;
+    }
+
+    const report = [...byKey.values()].sort((a, b) => b.count - a.count);
     res.json(report);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -85,8 +84,7 @@ exports.getAbsentCount = async (req, res) => {
 exports.getBatchClassHistory = async (req, res) => {
   try {
     const history = await ClassTracking.find({ batch: req.params.batchId })
-      .sort({ date: -1 })
-      .populate('batch');
+      .sort({ date: -1 });
 
     const report = history.map((record) => ({
       date: record.date,

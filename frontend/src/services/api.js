@@ -9,7 +9,13 @@ function normalizeApiBase(raw) {
 }
 
 const resolved = normalizeApiBase(import.meta.env.VITE_API_URL) ||
-  (import.meta.env.DEV ? '/api' : typeof window !== 'undefined' ? `${window.location.origin}/api` : '/api');
+  (import.meta.env.DEV
+    ? '/api'
+    : typeof window !== 'undefined'
+    ? window.location.hostname.includes('netlify.app')
+      ? 'https://coaching-management.vercel.app/api'
+      : `${window.location.origin}/api`
+    : '/api');
 
 if (!import.meta.env.DEV && !normalizeApiBase(import.meta.env.VITE_API_URL)) {
   console.warn(
