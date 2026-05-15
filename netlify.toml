@@ -1,0 +1,14 @@
+# Use this file when the Netlify site root is the Git repo root (no "Base directory" set).
+# If Base directory = "frontend", Netlify uses frontend/netlify.toml instead.
+
+[build]
+  command = "cd frontend && npm ci && npm run build"
+  publish = "frontend/dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

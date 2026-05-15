@@ -1,32 +1,48 @@
 const ClassTracking = require('../models/ClassTracking');
 
+const batchLookupStages = [
+  {
+    $lookup: {
+      from: 'batches',
+      localField: 'batch',
+      foreignField: '_id',
+      as: 'batchData',
+    },
+  },
+  {
+    $unwind: { path: '$batchData', preserveNullAndEmptyArrays: true },
+  },
+  {
+    $addFields: {
+      teacherRef: {
+        $ifNull: [
+          '$teacher',
+          {
+            $ifNull: [
+              '$batchData.teacher',
+              { $arrayElemAt: [{ $ifNull: ['$batchData.teachers', []] }, 0] },
+            ],
+          },
+        ],
+      },
+    },
+  },
+  {
+    $lookup: {
+      from: 'teachers',
+      localField: 'teacherRef',
+      foreignField: '_id',
+      as: 'teacherLookup',
+    },
+  },
+  { $unwind: { path: '$teacherLookup', preserveNullAndEmptyArrays: true } },
+];
+
 // Get teacher class count report
 exports.getTeacherClassCount = async (req, res) => {
   try {
     const report = await ClassTracking.aggregate([
-      {
-        $lookup: {
-          from: 'batches',
-          localField: 'batch',
-          foreignField: '_id',
-          as: 'batchData',
-        },
-      },
-      { $unwind: '$batchData' },
-      {
-        $addFields: {
-          teacherRef: { $ifNull: ['$teacher', '$batchData.teacher'] },
-        },
-      },
-      {
-        $lookup: {
-          from: 'teachers',
-          localField: 'teacherRef',
-          foreignField: '_id',
-          as: 'teacherLookup',
-        },
-      },
-      { $unwind: { path: '$teacherLookup', preserveEmptyAndNullArrays: true } },
+      ...batchLookupStages,
       {
         $group: {
           _id: '$teacherLookup._id',
@@ -47,34 +63,12 @@ exports.getTeacherClassCount = async (req, res) => {
 exports.getAbsentCount = async (req, res) => {
   try {
     const report = await ClassTracking.aggregate([
-      {
-        $lookup: {
-          from: 'batches',
-          localField: 'batch',
-          foreignField: '_id',
-          as: 'batchData',
-        },
-      },
-      { $unwind: '$batchData' },
-      {
-        $addFields: {
-          teacherRef: { $ifNull: ['$teacher', '$batchData.teacher'] },
-        },
-      },
-      {
-        $lookup: {
-          from: 'teachers',
-          localField: 'teacherRef',
-          foreignField: '_id',
-          as: 'teacherLookup',
-        },
-      },
-      { $unwind: { path: '$teacherLookup', preserveEmptyAndNullArrays: true } },
+      ...batchLookupStages,
       {
         $group: {
           _id: '$teacherLookup._id',
           teacher: { $first: { $ifNull: ['$teacherLookup.name', 'Unknown'] } },
-          count: { $sum: '$totalAbsent' },
+          count: { $sum: { $ifNull: ['$totalAbsent', 0] } },
         },
       },
       { $sort: { count: -1 } },
