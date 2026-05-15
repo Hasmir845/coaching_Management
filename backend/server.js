@@ -31,8 +31,22 @@ if (frontendOrigins.length === 1) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Middleware to ensure DB is connected before handling requests
-app.use(async (req, res, next) => {
+// Root (opening the deployment URL without /api/...)
+app.get('/', (req, res) => {
+  res.status(200).json({
+    ok: true,
+    message: 'Coaching API',
+    health: '/api/health',
+  });
+});
+
+// Health check (no DB required)
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'Server is running' });
+});
+
+// Middleware to ensure DB is connected before handling data requests
+app.use('/api/teachers', async (req, res, next) => {
   try {
     await dbConnect();
     next();
@@ -42,13 +56,74 @@ app.use(async (req, res, next) => {
   }
 });
 
-// Root (opening the deployment URL without /api/...)
-app.get('/', (req, res) => {
-  res.status(200).json({
-    ok: true,
-    message: 'Coaching API',
-    health: '/api/health',
-  });
+app.use('/api/students', async (req, res, next) => {
+  try {
+    await dbConnect();
+    next();
+  } catch (error) {
+    console.error('DB connection failed:', error);
+    res.status(503).json({ message: 'Database connection failed' });
+  }
+});
+
+app.use('/api/batches', async (req, res, next) => {
+  try {
+    await dbConnect();
+    next();
+  } catch (error) {
+    console.error('DB connection failed:', error);
+    res.status(503).json({ message: 'Database connection failed' });
+  }
+});
+
+app.use('/api/class-tracking', async (req, res, next) => {
+  try {
+    await dbConnect();
+    next();
+  } catch (error) {
+    console.error('DB connection failed:', error);
+    res.status(503).json({ message: 'Database connection failed' });
+  }
+});
+
+app.use('/api/slot-attendance', async (req, res, next) => {
+  try {
+    await dbConnect();
+    next();
+  } catch (error) {
+    console.error('DB connection failed:', error);
+    res.status(503).json({ message: 'Database connection failed' });
+  }
+});
+
+app.use('/api/dashboard', async (req, res, next) => {
+  try {
+    await dbConnect();
+    next();
+  } catch (error) {
+    console.error('DB connection failed:', error);
+    res.status(503).json({ message: 'Database connection failed' });
+  }
+});
+
+app.use('/api/reports', async (req, res, next) => {
+  try {
+    await dbConnect();
+    next();
+  } catch (error) {
+    console.error('DB connection failed:', error);
+    res.status(503).json({ message: 'Database connection failed' });
+  }
+});
+
+app.use('/api/finance', async (req, res, next) => {
+  try {
+    await dbConnect();
+    next();
+  } catch (error) {
+    console.error('DB connection failed:', error);
+    res.status(503).json({ message: 'Database connection failed' });
+  }
 });
 
 // Routes
@@ -60,11 +135,6 @@ app.use('/api/slot-attendance', slotAttendanceRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/finance', financeRoutes);
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'Server is running' });
-});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
