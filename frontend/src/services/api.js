@@ -12,7 +12,7 @@ function resolveApiBase() {
   if (import.meta.env.DEV) return '/api';
   const fromEnv = normalizeApiBase(import.meta.env.VITE_API_URL);
   if (fromEnv) return fromEnv;
-  return 'https://coaching-management-ubiu.vercel.app/api';
+  return 'https://coaching-management-ubiu-ergsdkhpc-md-hasmir-hassans-projects.vercel.app/api';
 }
 
 export const apiBaseURL = resolveApiBase();
