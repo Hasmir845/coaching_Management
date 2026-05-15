@@ -3,6 +3,7 @@ import { classTrackingAPI, batchAPI, studentAPI, teacherAPI, slotAttendanceAPI }
 import { Plus, Edit2, Trash2, BookOpen, ClipboardCheck } from 'lucide-react';
 import { format, parseISO, startOfWeek } from 'date-fns';
 import { refToId } from '../utils/refs';
+import PageLoader from '../components/PageLoader';
 
 function teachersForBatch(batch, allTeachers) {
   if (!batch) return [];
@@ -206,7 +207,7 @@ const ClassTracking = () => {
   }, [classes, batches]);
 
   if (loading && !classes.length && !batches.length) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return <PageLoader />;
   }
 
   return (

@@ -21,7 +21,9 @@ const dbConnect = async () => {
   if (!cached.promise) {
     const opts = {
       serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+      maxPoolSize: 10,
     };
     cached.promise = mongoose
       .connect(process.env.MONGODB_URI, opts)

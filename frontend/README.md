@@ -28,10 +28,10 @@ VITE_FIREBASE_PROJECT_ID=your_project
 VITE_FIREBASE_STORAGE_BUCKET=your_bucket
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_id
 VITE_FIREBASE_APP_ID=your_app_id
-VITE_API_URL=http://localhost:5000/api
+# Local dev: omit VITE_API_URL (Vite proxies /api to port 5000).
 
-# For production, set VITE_API_URL to your backend host URL, for example:
-# VITE_API_URL=https://your-backend.vercel.app/api
+# Netlify production (set in Netlify UI, then redeploy):
+# VITE_API_URL=https://coaching-management-ubiu.vercel.app/api
 ```
 
 ## Development
@@ -45,6 +45,15 @@ npm run dev
 ```bash
 npm run build
 ```
+
+## Netlify deploy
+
+1. Netlify → Site settings → Environment variables  
+2. Add `VITE_API_URL` = `https://coaching-management-ubiu.vercel.app/api`  
+3. Add all `VITE_FIREBASE_*` variables  
+4. Trigger **Deploy** (build embeds env at compile time)
+
+Backend setup: [../backend/DEPLOY_VERCEL.md](../backend/DEPLOY_VERCEL.md)
 
 ## Pages
 

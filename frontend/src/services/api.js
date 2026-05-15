@@ -8,32 +8,25 @@ function normalizeApiBase(raw) {
   return u;
 }
 
-// Determine backend URL with fallback strategy
-let resolved;
-if (import.meta.env.DEV) {
-  // Local development
-  resolved = '/api';
-} else if (import.meta.env.VITE_API_URL) {
-  // Production with explicit config
-  resolved = normalizeApiBase(import.meta.env.VITE_API_URL);
-} else if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-  // Local with explicit host
-  resolved = '/api';
-} else {
-  // Production without config - use Vercel backend
-  resolved = 'https://coaching-management-ubiu.vercel.app/api';
+function resolveApiBase() {
+  if (import.meta.env.DEV) return '/api';
+  const fromEnv = normalizeApiBase(import.meta.env.VITE_API_URL);
+  if (fromEnv) return fromEnv;
+  return 'https://coaching-management-ubiu.vercel.app/api';
 }
+
+export const apiBaseURL = resolveApiBase();
 
 if (!import.meta.env.DEV && !import.meta.env.VITE_API_URL) {
   console.warn(
-    'VITE_API_URL not configured. Using fallback:',
-    resolved,
-    '\nFor better control, set VITE_API_URL in your deployment environment variables.'
+    'VITE_API_URL not set on Netlify. Using fallback:',
+    apiBaseURL,
+    '\nSet VITE_API_URL and redeploy for a stable production build.'
   );
 }
 
 const api = axios.create({
-  baseURL: resolved,
+  baseURL: apiBaseURL,
   timeout: 12000,
 });
 

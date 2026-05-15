@@ -77,11 +77,18 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Local / traditional host only — Vercel loads `api/index.js` → this file (no listen)
+// Local only — Vercel imports via api/index.js (no listen)
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+  dbConnect()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error('Failed to connect to MongoDB:', err.message);
+      process.exit(1);
+    });
 }
 
 module.exports = app;

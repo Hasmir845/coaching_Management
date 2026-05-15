@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { apiBaseURL } from './services/api';
-import MissingApiConfig from './components/MissingApiConfig';
+import { isFirebaseConfigured } from './firebase';
+import MissingFirebaseConfig from './components/MissingFirebaseConfig';
+import PageLoader from './components/PageLoader';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -17,11 +18,7 @@ const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-2xl font-bold text-primary">Loading...</div>
-      </div>
-    );
+    return <PageLoader label="লগইন যাচাই হচ্ছে…" />;
   }
 
   if (!user) {
@@ -51,8 +48,8 @@ const MainLayout = ({ children }) => {
 };
 
 function App() {
-  if (!import.meta.env.DEV && !apiBaseURL) {
-    return <MissingApiConfig />;
+  if (!import.meta.env.DEV && !isFirebaseConfigured()) {
+    return <MissingFirebaseConfig />;
   }
 
   return (

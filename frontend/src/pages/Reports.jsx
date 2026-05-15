@@ -13,6 +13,7 @@ import {
   Cell,
   Legend,
 } from 'recharts';
+import PageLoader from '../components/PageLoader';
 
 const Reports = () => {
   const [teacherClassCount, setTeacherClassCount] = useState([]);
@@ -70,7 +71,7 @@ const Reports = () => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return <PageLoader />;
   }
 
   return (

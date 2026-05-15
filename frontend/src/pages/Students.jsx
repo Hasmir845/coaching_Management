@@ -4,6 +4,7 @@ import { Plus, Edit2, Trash2, Search } from 'lucide-react';
 import { refToId } from '../utils/refs';
 import { formatApiError } from '../utils/apiError';
 import LoadErrorBanner from '../components/LoadErrorBanner';
+import PageLoader from '../components/PageLoader';
 
 const Students = () => {
   const [students, setStudents] = useState([]);
@@ -139,7 +140,7 @@ const Students = () => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return <PageLoader />;
   }
 
   return (

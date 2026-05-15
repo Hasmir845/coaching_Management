@@ -3,6 +3,7 @@ import { teacherAPI } from '../services/api';
 import { Plus, Edit2, Trash2, Search } from 'lucide-react';
 import { formatApiError } from '../utils/apiError';
 import LoadErrorBanner from '../components/LoadErrorBanner';
+import PageLoader from '../components/PageLoader';
 
 const Teachers = () => {
   const [teachers, setTeachers] = useState([]);
@@ -91,7 +92,7 @@ const Teachers = () => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return <PageLoader />;
   }
 
   return (

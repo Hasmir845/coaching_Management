@@ -1,14 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { auth, googleProvider } from '../firebase';
+import { subscribeAuth } from '../auth/authListener';
 import {
-  auth,
-  googleProvider
-} from '../firebase';
-import {
-  onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
-  signOut as firebaseSignOut
+  signOut as firebaseSignOut,
 } from 'firebase/auth';
 
 const AuthContext = createContext(null);
@@ -18,45 +15,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let settled = false;
-
-    const finish = (currentUser) => {
-      if (settled) return;
-      settled = true;
-      setUser(currentUser);
+    return subscribeAuth((firebaseUser, isReady) => {
+      if (!isReady) return;
+      setUser(firebaseUser);
       setLoading(false);
-    };
-
-    const timeoutId = setTimeout(() => {
-      if (!settled) {
-        console.warn(
-          'Firebase auth did not respond in time. Check VITE_FIREBASE_* in .env (local) or site build settings (Netlify).'
-        );
-        finish(null);
-      }
-    }, 10000);
-
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (currentUser) => {
-        clearTimeout(timeoutId);
-        finish(currentUser);
-      },
-      (error) => {
-        console.error('Firebase auth error:', error);
-        clearTimeout(timeoutId);
-        finish(null);
-      }
-    );
-
-    return () => {
-      clearTimeout(timeoutId);
-      unsubscribe();
-    };
+    });
   }, []);
 
-  // Email/Password Sign In
   const signInWithEmail = async (email, password) => {
+    if (!auth) return { success: false, error: 'Firebase is not configured' };
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
       return { success: true, user: result.user };
@@ -65,8 +32,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Email/Password Sign Up
   const signUpWithEmail = async (email, password) => {
+    if (!auth) return { success: false, error: 'Firebase is not configured' };
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
       return { success: true, user: result.user };
@@ -75,8 +42,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Google Sign In
   const signInWithGoogle = async () => {
+    if (!auth || !googleProvider) return { success: false, error: 'Firebase is not configured' };
     try {
       const result = await signInWithPopup(auth, googleProvider);
       return { success: true, user: result.user };
@@ -85,8 +52,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Sign Out
   const signOut = async () => {
+    if (!auth) return { success: false, error: 'Firebase is not configured' };
     try {
       await firebaseSignOut(auth);
       return { success: true };
@@ -96,15 +63,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      auth,
-      signInWithEmail,
-      signUpWithEmail,
-      signInWithGoogle,
-      signOut
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        auth,
+        signInWithEmail,
+        signUpWithEmail,
+        signInWithGoogle,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

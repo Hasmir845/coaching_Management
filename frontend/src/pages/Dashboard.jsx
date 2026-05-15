@@ -15,6 +15,7 @@ import {
 import { format, startOfWeek, parseISO, startOfMonth } from 'date-fns';
 import { formatApiError } from '../utils/apiError';
 import LoadErrorBanner from '../components/LoadErrorBanner';
+import PageLoader from '../components/PageLoader';
 
 function mondayOfDateKey(dateKey) {
   return format(startOfWeek(parseISO(dateKey), { weekStartsOn: 1 }), 'yyyy-MM-dd');
@@ -108,11 +109,7 @@ const Dashboard = () => {
   }, [fetchClassRegister]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-2xl font-bold text-primary">Loading...</div>
-      </div>
-    );
+    return <PageLoader label="ড্যাশবোর্ড লোড হচ্ছে…" />;
   }
 
   const StatCard = ({ icon: Icon, title, value, color }) => (
