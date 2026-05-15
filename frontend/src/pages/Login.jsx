@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, AlertCircle, Eye, EyeOff, User, Phone, Building } from 'lucide-react';
+import SetupDiagnostics from '../components/SetupDiagnostics';
 
 function GoogleIcon() {
   return (
@@ -117,6 +118,7 @@ const Login = () => {
 
         {/* Main Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+          <SetupDiagnostics />
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
               <AlertCircle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />

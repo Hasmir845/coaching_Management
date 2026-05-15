@@ -16,18 +16,24 @@ const financeRoutes = require('./routes/finance');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware — FRONTEND_URL on Vercel: one origin or comma-separated (prod + Netlify previews)
+// CORS — FRONTEND_URL + any *.netlify.app (common misconfig: wrong exact Netlify URL)
 const frontendOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
   .map((s) => s.trim().replace(/\/$/, ''))
   .filter(Boolean);
-if (frontendOrigins.length === 1) {
-  app.use(cors({ origin: frontendOrigins[0], credentials: true }));
-} else if (frontendOrigins.length > 1) {
-  app.use(cors({ origin: frontendOrigins, credentials: true }));
-} else {
-  app.use(cors());
+
+function corsOrigin(origin, callback) {
+  if (!origin) return callback(null, true);
+  if (frontendOrigins.includes(origin)) return callback(null, true);
+  if (/^https:\/\/([a-z0-9-]+\.)*netlify\.app$/i.test(origin)) {
+    return callback(null, true);
+  }
+  if (frontendOrigins.length === 0) return callback(null, true);
+  console.warn('CORS blocked origin:', origin, 'Expected one of:', frontendOrigins);
+  return callback(new Error(`CORS: ${origin} not allowed`));
 }
+
+app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

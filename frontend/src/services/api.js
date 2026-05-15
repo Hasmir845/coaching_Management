@@ -30,6 +30,21 @@ const api = axios.create({
   timeout: 12000,
 });
 
+api.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    if (error.response?.status === 403 || error.message === 'Network Error') {
+      console.error(
+        '[API]',
+        error.message,
+        '— CORS বা Vercel FRONTEND_URL চেক করুন। API:',
+        apiBaseURL
+      );
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Teachers API
 export const teacherAPI = {
   getAll: () => api.get('/teachers'),

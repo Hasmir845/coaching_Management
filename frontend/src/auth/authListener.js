@@ -1,14 +1,14 @@
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase';
 
-/** Single Firebase auth subscription (avoids StrictMode double-mount hangs on Netlify refresh). */
-let user = undefined;
+/** Single Firebase auth subscription (Netlify refresh-safe). */
+let user = null;
 let ready = false;
 const listeners = new Set();
 let unsubscribeFirebase = null;
 let timeoutId = null;
 
-const AUTH_WAIT_MS = 8000;
+const AUTH_WAIT_MS = 12000;
 
 function emit() {
   listeners.forEach((fn) => {
@@ -20,13 +20,14 @@ function emit() {
   });
 }
 
-function markReady(nextUser) {
-  if (ready) return;
-  ready = true;
-  user = nextUser ?? null;
-  if (timeoutId) {
-    clearTimeout(timeoutId);
-    timeoutId = null;
+function setAuthUser(firebaseUser) {
+  user = firebaseUser ?? null;
+  if (!ready) {
+    ready = true;
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
   }
   emit();
 }
@@ -35,23 +36,27 @@ function ensureSubscription() {
   if (unsubscribeFirebase) return;
 
   if (!auth) {
-    markReady(null);
+    ready = true;
+    user = null;
+    emit();
     return;
   }
 
   timeoutId = setTimeout(() => {
     if (!ready) {
-      console.warn('Firebase auth timeout — check VITE_FIREBASE_* and authorized domains on Netlify.');
-      markReady(null);
+      console.warn(
+        'Firebase auth timeout — check VITE_FIREBASE_* on Netlify and Authorized domains in Firebase Console.'
+      );
+      setAuthUser(null);
     }
   }, AUTH_WAIT_MS);
 
   unsubscribeFirebase = onAuthStateChanged(
     auth,
-    (firebaseUser) => markReady(firebaseUser),
+    (firebaseUser) => setAuthUser(firebaseUser),
     (error) => {
       console.error('Firebase auth error:', error);
-      markReady(null);
+      setAuthUser(null);
     }
   );
 }
