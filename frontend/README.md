@@ -29,6 +29,9 @@ VITE_FIREBASE_STORAGE_BUCKET=your_bucket
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_id
 VITE_FIREBASE_APP_ID=your_app_id
 VITE_API_URL=http://localhost:5000/api
+
+# For production, set VITE_API_URL to your backend host URL, for example:
+# VITE_API_URL=https://your-backend.vercel.app/api
 ```
 
 ## Development

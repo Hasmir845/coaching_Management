@@ -73,7 +73,10 @@ const Finance = () => {
       setBatches(Array.isArray(batchRes.data) ? batchRes.data : []);
     } catch (e) {
       console.error(e);
-      setError('ডেটা লোড করা যায়নি। ব্যাকএন্ড চালু আছে কিনা দেখুন।');
+      setError(
+        e.response?.data?.message || e.message || 'ডেটা লোড করা যায়নি। ব্যাকএন্ড চালু আছে কিনা দেখুন।'
+      );
+      console.error('Finance fetchAll error:', e.response || e.message || e);
     } finally {
       setLoading(false);
     }

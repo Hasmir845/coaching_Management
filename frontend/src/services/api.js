@@ -8,9 +8,16 @@ function normalizeApiBase(raw) {
   return u;
 }
 
-const resolved =
-  normalizeApiBase(import.meta.env.VITE_API_URL) ||
-  (import.meta.env.DEV ? '/api' : 'http://localhost:5000/api');
+const resolved = normalizeApiBase(import.meta.env.VITE_API_URL) ||
+  (import.meta.env.DEV ? '/api' : typeof window !== 'undefined' ? `${window.location.origin}/api` : '/api');
+
+if (!import.meta.env.DEV && !normalizeApiBase(import.meta.env.VITE_API_URL)) {
+  console.warn(
+    'VITE_API_URL is not configured. Falling back to',
+    resolved,
+    '\nIf your backend is hosted separately from the frontend, set VITE_API_URL to the full API URL in your production environment.'
+  );
+}
 
 const api = axios.create({
   baseURL: resolved,

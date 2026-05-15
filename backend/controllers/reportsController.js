@@ -10,16 +10,13 @@ const batchLookupStages = [
     },
   },
   {
-    $unwind: { path: '$batchData', preserveNullAndEmptyArrays: true },
-  },
-  {
     $addFields: {
       teacherRef: {
         $ifNull: [
           '$teacher',
           {
             $ifNull: [
-              '$batchData.teacher',
+              { $arrayElemAt: ['$batchData.teacher', 0] },
               { $arrayElemAt: [{ $ifNull: ['$batchData.teachers', []] }, 0] },
             ],
           },
@@ -35,7 +32,11 @@ const batchLookupStages = [
       as: 'teacherLookup',
     },
   },
-  { $unwind: { path: '$teacherLookup', preserveNullAndEmptyArrays: true } },
+  {
+    $addFields: {
+      teacherLookup: { $arrayElemAt: ['$teacherLookup', 0] },
+    },
+  },
 ];
 
 // Get teacher class count report

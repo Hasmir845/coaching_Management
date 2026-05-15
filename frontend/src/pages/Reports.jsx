@@ -49,6 +49,7 @@ const Reports = () => {
           err.message ||
           'রিপোর্ট লোড করা যায়নি। API ঠিক আছে কিনা (VITE_API_URL) ও ব্যাকএন্ড চালু আছে কিনা দেখুন।'
       );
+      console.error('Reports fetchReports error:', err.response || err.message || err);
     } finally {
       setLoading(false);
     }
