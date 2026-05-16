@@ -5,7 +5,7 @@
 [build.environment]
   NODE_VERSION = "20"
   # Required — also set in Netlify UI → Environment variables, then redeploy:
-  VITE_API_URL = "https://coaching-management-ubiu.vercel.app/api"
+  VITE_API_URL = "https://coaching-management-beta.vercel.app/api"
 
 # SPA (React Router). Also see public/_redirects (copied into dist).
 [[redirects]]
