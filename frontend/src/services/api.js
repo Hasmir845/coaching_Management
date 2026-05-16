@@ -12,7 +12,7 @@ function resolveApiBase() {
   if (import.meta.env.DEV) return '/api';
   const fromEnv = normalizeApiBase(import.meta.env.VITE_API_URL);
   if (fromEnv) return fromEnv;
-  return 'https://coaching-management-beta.vercel.app/api';
+  return 'https://coaching-backend-bm5g.onrender.com/api';
 }
 
 export const apiBaseURL = resolveApiBase();

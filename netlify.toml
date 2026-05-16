@@ -7,7 +7,7 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  VITE_API_URL = "https://coaching-management-ubiu.vercel.app/api"
+  VITE_API_URL = "https://coaching-backend-bm5g.onrender.com/api"
 
 [[redirects]]
   from = "/*"

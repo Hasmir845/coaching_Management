@@ -310,7 +310,7 @@ To set up Firebase authentication:
 
 - Vercel project **Root Directory** = `backend` (not repo root).
 - Env vars and redeploy steps: [backend/DEPLOY_VERCEL.md](backend/DEPLOY_VERCEL.md)
-- Health check: `https://coaching-management-ubiu.vercel.app/api/health`
+- Health check: `https://coaching-backend-bm5g.onrender.com/api/health`
 
 ### Frontend (Netlify)
 
@@ -318,7 +318,7 @@ To set up Firebase authentication:
 cd frontend && npm run build
 ```
 
-- Set `VITE_API_URL=https://coaching-management-ubiu.vercel.app/api` in Netlify environment variables, then redeploy.
+- Set `VITE_API_URL=https://coaching-backend-bm5g.onrender.com/api` in Netlify environment variables, then redeploy.
 - Local dev: `npm run dev` (uses Vite proxy to `http://127.0.0.1:5000` when backend is running).
 
 ### Backend (local)

@@ -31,7 +31,7 @@ VITE_FIREBASE_APP_ID=your_app_id
 # Local dev: omit VITE_API_URL (Vite proxies /api to port 5000).
 
 # Netlify production (set in Netlify UI, then redeploy):
-# VITE_API_URL=https://coaching-management-ubiu.vercel.app/api
+# VITE_API_URL=https://coaching-backend-bm5g.onrender.com/api
 ```
 
 ## Development
@@ -49,7 +49,7 @@ npm run build
 ## Netlify deploy
 
 1. Netlify → Site settings → Environment variables  
-2. Add `VITE_API_URL` = `https://coaching-management-ubiu.vercel.app/api`  
+2. Add `VITE_API_URL` = `https://coaching-backend-bm5g.onrender.com/api`  
 3. Add all `VITE_FIREBASE_*` variables  
 4. Trigger **Deploy** (build embeds env at compile time)
 
