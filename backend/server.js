@@ -12,6 +12,7 @@ const slotAttendanceRoutes = require('./routes/slotAttendance');
 const dashboardRoutes = require('./routes/dashboard');
 const reportsRoutes = require('./routes/reports');
 const financeRoutes = require('./routes/finance');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -76,6 +77,7 @@ const ensureDbConnected = async (req, res, next) => {
 };
 
 // Routes with DB connection middleware
+app.use('/api/admin', ensureDbConnected, adminRoutes);
 app.use('/api/teachers', ensureDbConnected, teacherRoutes);
 app.use('/api/students', ensureDbConnected, studentRoutes);
 app.use('/api/batches', ensureDbConnected, batchRoutes);
