@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { dashboardAPI, slotAttendanceAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { adminAPI, dashboardAPI, slotAttendanceAPI } from '../services/api';
 import {
   Users,
   BookOpen,
@@ -28,6 +29,7 @@ function shiftWeekMonday(weekMonday, deltaWeeks) {
 }
 
 const Dashboard = () => {
+  const { user, isAdmin, isTeacher, teacherRequestStatus, refreshUser } = useAuth();
   const [stats, setStats] = useState(null);
   const [todayClasses, setTodayClasses] = useState([]);
   const [notHeldClasses, setNotHeldClasses] = useState([]);
@@ -35,6 +37,9 @@ const Dashboard = () => {
   const [recentActivities, setRecentActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [teacherSubject, setTeacherSubject] = useState('');
+  const [teacherStatusMessage, setTeacherStatusMessage] = useState('');
+  const [teacherRequestLoading, setTeacherRequestLoading] = useState(false);
   const [registerStart, setRegisterStart] = useState(() => format(startOfMonth(new Date()), 'yyyy-MM-dd'));
   const [registerEnd, setRegisterEnd] = useState(() => format(new Date(), 'yyyy-MM-dd'));
   const [classRegister, setClassRegister] = useState({
@@ -101,6 +106,23 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
+  const handleApplyForTeacher = async () => {
+    try {
+      setTeacherStatusMessage('');
+      setTeacherRequestLoading(true);
+      const response = await adminAPI.applyForTeacher({ subject: teacherSubject });
+      setTeacherStatusMessage(response.data?.message || 'Teacher request submitted.');
+      await refreshUser(user);
+    } catch (error) {
+      console.error('Error applying for teacher:', error);
+      setTeacherStatusMessage(
+        error.response?.data?.message || 'Unable to submit teacher request at this time.'
+      );
+    } finally {
+      setTeacherRequestLoading(false);
+    }
+  };
+
   const fetchClassRegister = useCallback(async () => {
     try {
       setRegisterLoading(true);
@@ -165,6 +187,44 @@ const Dashboard = () => {
           <p className="text-gray-600">Welcome back to Coaching Management System</p>
         </div>
       </div>
+
+      {!isAdmin && !isTeacher && (
+        <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-5">
+          <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+              <p className="text-green-800 font-semibold">Request teacher access</p>
+              <p className="text-sm text-green-700">
+                Submit a teacher access request and wait for admin approval.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-stretch gap-3">
+              <input
+                type="text"
+                value={teacherSubject}
+                onChange={(e) => setTeacherSubject(e.target.value)}
+                placeholder="Your subject"
+                className="input-field w-full sm:w-72"
+                disabled={teacherRequestLoading || teacherRequestStatus === 'pending'}
+              />
+              <button
+                type="button"
+                onClick={handleApplyForTeacher}
+                disabled={teacherRequestLoading || teacherRequestStatus === 'pending'}
+                className="btn-secondary inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold"
+              >
+                {teacherRequestLoading
+                  ? 'Submitting…'
+                  : teacherRequestStatus === 'pending'
+                  ? 'Request Pending'
+                  : 'Request Teacher Access'}
+              </button>
+            </div>
+          </div>
+          {teacherStatusMessage && (
+            <p className="mt-3 text-sm text-green-900">{teacherStatusMessage}</p>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <StatCard

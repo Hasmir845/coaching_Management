@@ -30,6 +30,23 @@ const api = axios.create({
   timeout: 12000,
 });
 
+// Request interceptor to add Firebase UID
+api.interceptors.request.use(
+  async (config) => {
+    try {
+      // Get Firebase user from localStorage or auth context
+      const firebaseUser = JSON.parse(localStorage.getItem('firebaseUser'));
+      if (firebaseUser?.uid) {
+        config.headers['x-firebase-uid'] = firebaseUser.uid;
+      }
+    } catch (error) {
+      // Silently handle any errors with getting Firebase user
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 api.interceptors.response.use(
   (res) => res,
   (error) => {
@@ -91,6 +108,27 @@ export const classTrackingAPI = {
   getByBatch: (batchId) => api.get(`/class-tracking/batch/${batchId}`),
 };
 
+// Admin API
+export const adminAPI = {
+  getMe: () => api.get('/admin/me'),
+  upsert: (data) => api.post('/admin/upsert', data),
+  applyForAdmin: () => api.post('/admin/apply'),
+  getUsers: () => api.get('/admin/users'),
+  getTeachers: () => api.get('/admin/teachers'),
+  getApplications: () => api.get('/admin/applications'),
+  getTeacherApplications: () => api.get('/admin/teacher-applications'),
+  approveAdminRequest: (userId) => api.post(`/admin/users/${userId}/approve-admin`),
+  rejectAdminRequest: (userId) => api.post(`/admin/users/${userId}/reject-admin`),
+  clearAdminRequest: (userId) => api.post(`/admin/users/${userId}/clear-admin-request`),
+  clearTeacherRequest: (userId) => api.post(`/admin/users/${userId}/clear-teacher-request`),
+  applyForTeacher: (payload) => api.post('/admin/apply-teacher', payload),
+  makeAdmin: (userId) => api.post(`/admin/users/${userId}/make-admin`),
+  removeAdmin: (userId) => api.post(`/admin/users/${userId}/remove-admin`),
+  removeTeacher: (userId) => api.post(`/admin/users/${userId}/remove-teacher`),
+  assignTeacher: (userId, teacherId) => api.post(`/admin/users/${userId}/assign-teacher`, { teacherId }),
+  deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
+};
+
 // Dashboard API
 export const dashboardAPI = {
   getStats: () => api.get('/dashboard/stats'),
@@ -126,4 +164,5 @@ export const financeAPI = {
   delete: (id) => api.delete(`/finance/${id}`),
 };
 
+export { api };
 export default api;

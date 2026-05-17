@@ -22,6 +22,19 @@ function emit() {
 
 function setAuthUser(firebaseUser) {
   user = firebaseUser ?? null;
+  
+  // Save Firebase user to localStorage for API interceptor
+  if (firebaseUser) {
+    localStorage.setItem('firebaseUser', JSON.stringify({
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      displayName: firebaseUser.displayName,
+      photoURL: firebaseUser.photoURL,
+    }));
+  } else {
+    localStorage.removeItem('firebaseUser');
+  }
+  
   if (!ready) {
     ready = true;
     if (timeoutId) {

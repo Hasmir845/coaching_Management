@@ -14,6 +14,8 @@ import Batches from './pages/Batches';
 import ClassTracking from './pages/ClassTracking';
 import Reports from './pages/Reports';
 import Finance from './pages/Finance';
+import Admin from './pages/Admin';
+import TeacherDashboard from './pages/TeacherDashboard';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -24,6 +26,24 @@ const ProtectedRoute = ({ children }) => {
 
   if (!user) {
     return <Navigate to="/login" />;
+  }
+
+  return children;
+};
+
+const AdminOnlyRoute = ({ children }) => {
+  const { user, loading, isAdmin } = useAuth();
+
+  if (loading) {
+    return <PageLoader label="যাচাই হচ্ছে…" />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" />;
   }
 
   return children;
@@ -65,6 +85,26 @@ function App() {
               <ProtectedRoute>
                 <MainLayout>
                   <Dashboard />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <AdminOnlyRoute>
+                <MainLayout>
+                  <Admin />
+                </MainLayout>
+              </AdminOnlyRoute>
+            }
+          />
+          <Route
+            path="/teacher-dashboard"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <TeacherDashboard />
                 </MainLayout>
               </ProtectedRoute>
             }

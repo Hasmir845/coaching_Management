@@ -35,7 +35,7 @@ const Login = () => {
     password: '',
     name: '',
     phone: '',
-    organization: ''
+    organization: '',
   });
   const [error, setError] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
@@ -63,7 +63,9 @@ const Login = () => {
     setLoading(true);
 
     const result = isSignUp
-      ? await signUpWithEmail(formData.email, formData.password)
+      ? await signUpWithEmail(formData.email, formData.password, {
+          displayName: formData.name,
+        })
       : await signInWithEmail(formData.email, formData.password);
 
     if (!result.success) {
@@ -94,7 +96,7 @@ const Login = () => {
       password: '',
       name: '',
       phone: '',
-      organization: ''
+      organization: '',
     });
   };
 
@@ -134,6 +136,11 @@ const Login = () => {
             <p className="text-gray-600 mt-1">
               {isSignUp ? 'Join our coaching management platform' : 'Sign in to your account'}
             </p>
+            {!isSignUp && (
+              <p className="text-sm text-indigo-600 mt-2">
+                {/* Admin login: <strong>hasmirhassan@gmail.com</strong> */}
+              </p>
+            )}
           </div>
 
           <form onSubmit={handleEmailAuth} className="space-y-5">
@@ -152,7 +159,7 @@ const Login = () => {
                       onChange={handleInputChange}
                       className="input-field-with-icon"
                       placeholder="Enter your full name"
-                      required={isSignUp}
+                      required
                       disabled={loading || googleLoading}
                     />
                   </div>

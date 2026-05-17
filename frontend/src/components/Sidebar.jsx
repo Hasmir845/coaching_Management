@@ -5,18 +5,18 @@ import { useAuth } from '../context/AuthContext';
 import { BrandTitle } from './BrandTitle';
 
 const Sidebar = ({ isOpen, toggleSidebar, navigate }) => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin, isTeacher } = useAuth();
   const location = useLocation();
   const [activeMenu, setActiveMenu] = useState('dashboard');
 
   // Update active menu based on current route
   useEffect(() => {
     const currentPath = location.pathname;
-    const menuItem = menuItems.find(item => item.route === currentPath);
+    const menuItem = getMenuItems().find(item => item.route === currentPath);
     if (menuItem) {
       setActiveMenu(menuItem.id);
     }
-  }, [location.pathname]);
+  }, [location.pathname, isAdmin, isTeacher]);
 
   const handleLogout = async () => {
     const result = await signOut();
@@ -25,15 +25,36 @@ const Sidebar = ({ isOpen, toggleSidebar, navigate }) => {
     }
   };
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊', route: '/' },
-    { id: 'teachers', label: 'Teachers', icon: '👨‍🏫', route: '/teachers' },
-    { id: 'batches', label: 'Batches', icon: '📚', route: '/batches' },
-    { id: 'students', label: 'Students', icon: '👨‍🎓', route: '/students' },
-    { id: 'classes', label: 'Class Tracking', icon: '📋', route: '/class-tracking' },
-    { id: 'reports', label: 'Reports', icon: '📈', route: '/reports' },
-    { id: 'finance', label: 'Accounts', icon: '💰', route: '/finance' },
-  ];
+  const getMenuItems = () => {
+    // Admin menu - can access everything
+    if (isAdmin) {
+      return [
+        { id: 'dashboard', label: 'Dashboard', icon: '📊', route: '/' },
+        { id: 'admin', label: 'Admin Panel', icon: '🔐', route: '/admin' },
+        { id: 'teachers', label: 'Teachers', icon: '👨‍🏫', route: '/teachers' },
+        { id: 'batches', label: 'Batches', icon: '📚', route: '/batches' },
+        { id: 'students', label: 'Students', icon: '👨‍🎓', route: '/students' },
+        { id: 'classes', label: 'Class Tracking', icon: '📋', route: '/class-tracking' },
+        { id: 'reports', label: 'Reports', icon: '📈', route: '/reports' },
+        { id: 'finance', label: 'Accounts', icon: '💰', route: '/finance' },
+      ];
+    }
+
+    // Teacher menu - limited access
+    if (isTeacher) {
+      return [
+        { id: 'classTracking', label: 'Class Tracking', icon: '📋', route: '/teacher-dashboard' },
+        { id: 'dashboard', label: 'Dashboard', icon: '📊', route: '/' },
+      ];
+    }
+
+    // Regular user menu
+    return [
+      { id: 'dashboard', label: 'Dashboard', icon: '📊', route: '/' },
+    ];
+  };
+
+  const menuItems = getMenuItems();
 
   return (
     <>
@@ -44,6 +65,14 @@ const Sidebar = ({ isOpen, toggleSidebar, navigate }) => {
         </button>
         <img src="/coaching-logo.svg" alt="Coaching logo" width={36} height={36} className="rounded-lg shrink-0" />
         <h1 className="font-bold text-lg truncate">Coaching Center</h1>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="ml-auto text-white p-1 shrink-0"
+          aria-label="Logout"
+        >
+          <LogOut size={24} />
+        </button>
       </div>
 
       {/* Sidebar */}
@@ -80,6 +109,8 @@ const Sidebar = ({ isOpen, toggleSidebar, navigate }) => {
                   <p className="text-white font-semibold truncate text-sm">
                     {user.displayName || user.email}
                   </p>
+                  {isAdmin && <p className="text-xs text-blue-400">Admin</p>}
+                  {isTeacher && <p className="text-xs text-green-400">Teacher</p>}
                 </div>
               </div>
             </div>
